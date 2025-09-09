@@ -1,34 +1,45 @@
-import { useState, useRef } from "react"
+import {  useRef, useState } from "react"
+import ResultModal from "./ResultModal";
 
 export default function TimerChallenge({heading, targetTime}){
     const timerRef = useRef();
-    const [timerStarted, setTimerStated] = useState(false);
-    const [hasTimerExpired, setTimerExpired] = useState(false);
+    const dialog = useRef();
+    const [timeRemaining, setTimeRemaining] = useState(targetTime*1000);
+    const isTimerActive = timeRemaining>0 && timeRemaining<targetTime*1000;
+
+    if(timeRemaining <=0 ){
+        dialog.current.open();
+        clearInterval(timerRef.current);
+    }
 
     function handleStartClick(){
-        timerRef.current = setTimeout(()=>{
-            setTimerExpired(true);
-        }, targetTime*1000)
-        setTimerStated(true);
+        timerRef.current = setInterval(()=>{
+            setTimeRemaining((currentTimeRem) => currentTimeRem-10);
+        }, 10)
     }
 
     function handleStop(){
-        clearTimeout(timerRef.current);
+        dialog.current.open();
+        clearInterval(timerRef.current);
+    }
+
+    function handleReset(){
+        setTimeRemaining(targetTime*1000);
     }
 
     return (
         <section className="challenge">
             <h2>{heading}</h2>
-            {hasTimerExpired && <p>You Lost!!</p>}
+            <ResultModal ref={dialog} timeRemaining={timeRemaining} targetTime={targetTime} handleReset={handleReset} />
             <p className="challenge-time">
                 {targetTime} {targetTime>1?'second':'seconds'}
             </p>
 
             <p>
-                <button onClick={ timerStarted? handleStop : handleStartClick}>{timerStarted?"Stop":"Start"}</button>
+                <button onClick={ isTimerActive? handleStop : handleStartClick}>{isTimerActive?"Stop":"Start"}</button>
             </p>
 
-            <p>{timerStarted?"Timer is running": "timer inacgive"}</p>
+            <p>{isTimerActive?"Timer is running": "timer inacgive"}</p>
         </section>
     )
 }
